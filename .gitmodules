@@ -1,0 +1,6 @@
+[submodule "src/include/stocks"]
+	path = src/include/stocks
+	url = https://github.com/collinsmith/stocks
+[submodule "src/include/cs_weapon_restrictions"]
+	path = src/include/cs_weapon_restrictions
+	url = https://github.com/collinsmith/cs_weapon_restrictions-inc
