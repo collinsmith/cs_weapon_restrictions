@@ -10,9 +10,9 @@
 #include "include/stocks/param_stocks.inc"
 #include "include/stocks/string_stocks.inc"
 
-//#define DEBUG_RESTRICTIONS
-//#define DEBUG_FORWARDS
-//#define DEBUG_STRIPPING
+#define DEBUG_RESTRICTIONS
+#define DEBUG_FORWARDS
+#define DEBUG_STRIPPING
 
 #define VERSION_STRING "1.0.0"
 
@@ -36,8 +36,6 @@ new const WEAPONENTNAMES[][] = {
   "weapon_ak47", "weapon_knife", "weapon_p90"
 };
 
-static Logger: logger = Invalid_Logger;
-
 static allowedWeapons[MAX_PLAYERS + 1];
 static fallbackWeapon[MAX_PLAYERS + 1];
 
@@ -56,13 +54,12 @@ public plugin_init() {
   getBuildId(buildId, charsmax(buildId));
   register_plugin("Weapon Restrictions API for CSTRIKE", buildId, "Tirant");
 
-  logger = LoggerCreate();
 #if defined DEBUG_RESTRICTIONS || defined DEBUG_FORWARDS || defined DEBUG_STRIPPING
-  LoggerSetVerbosity(logger, Severity_Lowest);
+  LoggerSetVerbosity(This_Logger, Severity_Lowest);
 #endif
 
   if (!cstrike_running()) {
-    LoggerLogError(logger, "Setting fail state: CSTRIKE is required for this plugin to run!");
+    LoggerLogError("Setting fail state: CSTRIKE is required for this plugin to run!");
     set_fail_state("CSTRIKE is required for this plugin to run!");
     return;
   }
@@ -100,14 +97,14 @@ public onItemDeployPost(const eWeapon) {
   if ((arsenal & fallbackFlag) == fallbackFlag) {
     if (weapon != fallback) {
 #if defined DEBUG_RESTRICTIONS
-      LoggerLogDebug(logger, "%s for %N is restricted, changing to fallback (%s)",
+      LoggerLogDebug("%s for %N is restricted, changing to fallback (%s)",
           WEAPONENTNAMES[weapon], id, WEAPONENTNAMES[fallback]);
 #endif
       engclient_cmd(id, WEAPONENTNAMES[fallback]);
     }
   } else {
 #if defined DEBUG_RESTRICTIONS
-    LoggerLogDebug(logger, "%s for %N is restricted and player does not own fallback (%s)",
+    LoggerLogDebug("%s for %N is restricted and player does not own fallback (%s)",
         WEAPONENTNAMES[weapon], id, WEAPONENTNAMES[fallback]);
 #endif
     hideWeapon(id);
@@ -116,7 +113,7 @@ public onItemDeployPost(const eWeapon) {
 
 hideWeapon(const id) {
 #if defined DEBUG_RESTRICTIONS
-  LoggerLogDebug(logger, "hiding weapon for %N", id);
+  LoggerLogDebug("hiding weapon for %N", id);
 #endif
   fm_setUserNextAttack(id, 99999.0);
   set_pev(id, pev_viewmodel2, NULL_STRING);
@@ -160,13 +157,13 @@ stock fm_stripWeapons(id, weapons) {
     new const eWeapon = fm_find_ent_by_owner(-1, WEAPONENTNAMES[i], id);
     if (!eWeapon) {
 #if defined DEBUG_STRIPPING
-      LoggerLogDebug(logger, "weapon ent %s not found!", WEAPONENTNAMES[i]);
+      LoggerLogDebug("weapon ent %s not found!", WEAPONENTNAMES[i]);
 #endif
       continue;
     }
 
 #if defined DEBUG_STRIPPING
-    LoggerLogDebug(logger, "forcing %N to drop %s", id, WEAPONENTNAMES[i]);
+    LoggerLogDebug("forcing %N to drop %s", id, WEAPONENTNAMES[i]);
 #endif
     engclient_cmd(id, "drop", WEAPONENTNAMES[i]);
     
@@ -176,7 +173,7 @@ stock fm_stripWeapons(id, weapons) {
     }
 
 #if defined DEBUG_STRIPPING
-    LoggerLogDebug(logger, "removing %s (%d) from map", WEAPONENTNAMES[i], eBox);
+    LoggerLogDebug("removing %s (%d) from map", WEAPONENTNAMES[i], eBox);
 #endif
     dllfunc(DLLFunc_Think, eBox);
   }
@@ -185,7 +182,7 @@ stock fm_stripWeapons(id, weapons) {
 resetWeaponRestrictions(id, bool: logEvent = true) {
 #if defined DEBUG_STRIPPING
   if (logEvent) {
-    LoggerLogDebug(logger, "resetting stripped weapons for %N", id);
+    LoggerLogDebug("resetting stripped weapons for %N", id);
   }
 #else
   #pragma unused logEvent
@@ -197,7 +194,7 @@ resetWeaponRestrictions(id, bool: logEvent = true) {
 
 setWeaponRestrictions(id, weapons, fallback, bool: strip) {
 #if defined DEBUG_RESTRICTIONS
-  LoggerLogDebug(logger, "restricting weapons for %N to 0x%08X", id, weapons | fallback);
+  LoggerLogDebug("restricting weapons for %N to 0x%08X", id, weapons | fallback);
 #endif
   weapons |= (1 << fallback);
   allowedWeapons[id] = weapons;
@@ -212,7 +209,7 @@ setWeaponRestrictions(id, weapons, fallback, bool: strip) {
     new const arsenal = get_user_weapons(id, junk, num);
     new const weaponsToStrip = (arsenal & ~weapons);
 #if defined DEBUG_RESTRICTIONS
-    LoggerLogDebug(logger, "stripping restricted weapons for %N 0x%08X", id, weaponsToStrip);
+    LoggerLogDebug("stripping restricted weapons for %N 0x%08X", id, weaponsToStrip);
 #endif
     fm_stripWeapons(id, weaponsToStrip);
   }
@@ -224,13 +221,13 @@ setWeaponRestrictions(id, weapons, fallback, bool: strip) {
 
 //native cs_getAllowedWeapons(const id);
 public native_getAllowedWeapons(plugin, numParams) {
-  if (!numParamsEqual(1, numParams, logger)) {
+  if (!numParamsEqual(1, numParams)) {
     return 0;
   }
 
   new const id = get_param(1);
   if (!is_user_connected(id)) {
-    ThrowIllegalArgumentException(logger, "Invalid player id specified: %d", id);
+    ThrowIllegalArgumentException(This_Logger, "Invalid player id specified: %d", id);
     return 0;
   }
   
@@ -241,13 +238,13 @@ public native_getAllowedWeapons(plugin, numParams) {
 //                                const fallback = CSW_KNIFE,
 //                                const bool: strip = false);
 public native_setWeaponRestrictions(plugin, numParams) {
-  if (!numParamsEqual(4, numParams, logger)) {
+  if (!numParamsEqual(4, numParams)) {
     return;
   }
 
   new const id = get_param(1);
   if (!is_user_connected(id)) {
-    ThrowIllegalArgumentException(logger, "Invalid player id specified: %d", id);
+    ThrowIllegalArgumentException(This_Logger, "Invalid player id specified: %d", id);
     return;
   }
 
@@ -259,13 +256,13 @@ public native_setWeaponRestrictions(plugin, numParams) {
 
 //native cs_resetWeaponRestrictions(const id);
 public native_resetWeaponRestrictions(plugin, numParams) {
-  if (!numParamsEqual(1, numParams, logger)) {
+  if (!numParamsEqual(1, numParams)) {
     return;
   }
 
   new const id = get_param(1);
   if (!is_user_connected(id)) {
-    ThrowIllegalArgumentException(logger, "Invalid player id specified: %d", id);
+    ThrowIllegalArgumentException(This_Logger, "Invalid player id specified: %d", id);
     return;
   }
 
