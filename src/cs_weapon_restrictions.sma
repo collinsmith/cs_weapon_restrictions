@@ -55,11 +55,11 @@ public plugin_init() {
   register_plugin("Weapon Restrictions API for CSTRIKE", buildId, "Tirant");
 
 #if defined DEBUG_RESTRICTIONS || defined DEBUG_FORWARDS || defined DEBUG_STRIPPING
-  LoggerSetVerbosity(This_Logger, Severity_Lowest);
+  SetLoggerVerbosity(UnsetLevel);
 #endif
 
   if (!cstrike_running()) {
-    LoggerLogError("Setting fail state: CSTRIKE is required for this plugin to run!");
+    loge("Setting fail state: CSTRIKE is required for this plugin to run!");
     set_fail_state("CSTRIKE is required for this plugin to run!");
     return;
   }
@@ -97,14 +97,14 @@ public onItemDeployPost(const eWeapon) {
   if ((arsenal & fallbackFlag) == fallbackFlag) {
     if (weapon != fallback) {
 #if defined DEBUG_RESTRICTIONS
-      LoggerLogDebug("%s for %N is restricted, changing to fallback (%s)",
+      logd("%s for %N is restricted, changing to fallback (%s)",
           WEAPONENTNAMES[weapon], id, WEAPONENTNAMES[fallback]);
 #endif
       engclient_cmd(id, WEAPONENTNAMES[fallback]);
     }
   } else {
 #if defined DEBUG_RESTRICTIONS
-    LoggerLogDebug("%s for %N is restricted and player does not own fallback (%s)",
+    logd("%s for %N is restricted and player does not own fallback (%s)",
         WEAPONENTNAMES[weapon], id, WEAPONENTNAMES[fallback]);
 #endif
     hideWeapon(id);
@@ -113,7 +113,7 @@ public onItemDeployPost(const eWeapon) {
 
 hideWeapon(const id) {
 #if defined DEBUG_RESTRICTIONS
-  LoggerLogDebug("hiding weapon for %N", id);
+  logd("hiding weapon for %N", id);
 #endif
   fm_setUserNextAttack(id, 99999.0);
   set_pev(id, pev_viewmodel2, NULL_STRING);
@@ -157,13 +157,13 @@ stock fm_stripWeapons(id, weapons) {
     new const eWeapon = fm_find_ent_by_owner(-1, WEAPONENTNAMES[i], id);
     if (!eWeapon) {
 #if defined DEBUG_STRIPPING
-      LoggerLogDebug("weapon ent %s not found!", WEAPONENTNAMES[i]);
+      logd("weapon ent %s not found!", WEAPONENTNAMES[i]);
 #endif
       continue;
     }
 
 #if defined DEBUG_STRIPPING
-    LoggerLogDebug("forcing %N to drop %s", id, WEAPONENTNAMES[i]);
+    logd("forcing %N to drop %s", id, WEAPONENTNAMES[i]);
 #endif
     engclient_cmd(id, "drop", WEAPONENTNAMES[i]);
     
@@ -173,7 +173,7 @@ stock fm_stripWeapons(id, weapons) {
     }
 
 #if defined DEBUG_STRIPPING
-    LoggerLogDebug("removing %s (%d) from map", WEAPONENTNAMES[i], eBox);
+    logd("removing %s (%d) from map", WEAPONENTNAMES[i], eBox);
 #endif
     dllfunc(DLLFunc_Think, eBox);
   }
@@ -182,7 +182,7 @@ stock fm_stripWeapons(id, weapons) {
 resetWeaponRestrictions(id, bool: logEvent = true) {
 #if defined DEBUG_STRIPPING
   if (logEvent) {
-    LoggerLogDebug("resetting stripped weapons for %N", id);
+    logd("resetting stripped weapons for %N", id);
   }
 #else
   #pragma unused logEvent
@@ -194,7 +194,7 @@ resetWeaponRestrictions(id, bool: logEvent = true) {
 
 setWeaponRestrictions(id, weapons, fallback, bool: strip) {
 #if defined DEBUG_RESTRICTIONS
-  LoggerLogDebug("restricting weapons for %N to 0x%08X", id, weapons | fallback);
+  logd("restricting weapons for %N to 0x%08X", id, weapons | fallback);
 #endif
   weapons |= (1 << fallback);
   allowedWeapons[id] = weapons;
@@ -209,7 +209,7 @@ setWeaponRestrictions(id, weapons, fallback, bool: strip) {
     new const arsenal = get_user_weapons(id, junk, num);
     new const weaponsToStrip = (arsenal & ~weapons);
 #if defined DEBUG_RESTRICTIONS
-    LoggerLogDebug("stripping restricted weapons for %N 0x%08X", id, weaponsToStrip);
+    logd("stripping restricted weapons for %N 0x%08X", id, weaponsToStrip);
 #endif
     fm_stripWeapons(id, weaponsToStrip);
   }
@@ -227,7 +227,7 @@ public native_getAllowedWeapons(plugin, numParams) {
 
   new const id = get_param(1);
   if (!is_user_connected(id)) {
-    ThrowIllegalArgumentException(This_Logger, "Invalid player id specified: %d", id);
+    ThrowIllegalArgumentException("Invalid player id specified: %d", id);
     return 0;
   }
   
@@ -244,7 +244,7 @@ public native_setWeaponRestrictions(plugin, numParams) {
 
   new const id = get_param(1);
   if (!is_user_connected(id)) {
-    ThrowIllegalArgumentException(This_Logger, "Invalid player id specified: %d", id);
+    ThrowIllegalArgumentException("Invalid player id specified: %d", id);
     return;
   }
 
@@ -262,7 +262,7 @@ public native_resetWeaponRestrictions(plugin, numParams) {
 
   new const id = get_param(1);
   if (!is_user_connected(id)) {
-    ThrowIllegalArgumentException(This_Logger, "Invalid player id specified: %d", id);
+    ThrowIllegalArgumentException("Invalid player id specified: %d", id);
     return;
   }
 
