@@ -10,9 +10,9 @@
 #include "include/stocks/param_stocks.inc"
 #include "include/stocks/string_utils.inc"
 
-#define DEBUG_RESTRICTIONS
-#define DEBUG_FORWARDS
-#define DEBUG_STRIPPING
+//#define DEBUG_RESTRICTIONS
+//#define DEBUG_FORWARDS
+//#define DEBUG_STRIPPING
 
 #define VERSION_STRING "1.0.0"
 
@@ -55,7 +55,7 @@ public plugin_init() {
   register_plugin("Weapon Restrictions API for CSTRIKE", buildId, "Tirant");
 
 #if defined DEBUG_RESTRICTIONS || defined DEBUG_FORWARDS || defined DEBUG_STRIPPING
-  SetLoggerVerbosity(UnsetLevel);
+  SetLoggerVerbosity(DebugLevel);
 #endif
 
   if (!cstrike_running()) {
