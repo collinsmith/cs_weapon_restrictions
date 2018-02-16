@@ -2,13 +2,13 @@
 #include <amxmisc>
 #include <cstrike>
 #include <fakemeta>
-#include <fakemeta_util>
 #include <hamsandwich>
 #include <logger>
+#include <reapi>
 
 #include "include/stocks/exception_stocks.inc"
 #include "include/stocks/param_stocks.inc"
-#include "include/stocks/string_stocks.inc"
+#include "include/stocks/string_utils.inc"
 
 #define DEBUG_RESTRICTIONS
 #define DEBUG_FORWARDS
@@ -154,7 +154,8 @@ stock fm_stripWeapons(id, weapons) {
  
     weapons &= ~flag;
 
-    new const eWeapon = fm_find_ent_by_owner(-1, WEAPONENTNAMES[i], id);
+    new start = MaxClients;
+    new const eWeapon = rg_find_ent_by_owner(start, WEAPONENTNAMES[i], id);
     if (!eWeapon) {
 #if defined DEBUG_STRIPPING
       logd("weapon ent %s not found!", WEAPONENTNAMES[i]);
@@ -165,7 +166,7 @@ stock fm_stripWeapons(id, weapons) {
 #if defined DEBUG_STRIPPING
     logd("forcing %N to drop %s", id, WEAPONENTNAMES[i]);
 #endif
-    engclient_cmd(id, "drop", WEAPONENTNAMES[i]);
+    rg_drop_item(id, WEAPONENTNAMES[i]);
     
     new const eBox = pev(eWeapon, pev_owner);
     if (!eBox || eBox == id) {
